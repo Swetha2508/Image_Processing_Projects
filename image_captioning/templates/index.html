@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Captioning System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4CAF50;
+            --info-color: #2196F3;
+            --warning-color: #ff9100;
+            --danger-color: #f44336;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 10px;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--dark-color);
+            padding-bottom: 50px;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .app-header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .app-header h1 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .app-header p {
+            margin-top: 10px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header i {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .dropzone {
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .dropzone:hover, .dropzone.dragover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .dropzone .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .dropzone p {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #555;
+        }
+        
+        .dropzone .sub-text {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .image-preview-card {
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-preview-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .image-preview-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .image-preview-card .card-img-overlay {
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview-card:hover .card-img-overlay {
+            opacity: 1;
+        }
+        
+        .image-preview-card .remove-btn {
+            background: white;
+            color: var(--danger-color);
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .image-preview-card .remove-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--secondary-color);
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:disabled {
+            background: #a0a0a0;
+            box-shadow: none;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            border: none;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-success:hover, .btn-success:focus {
+            background: #43a047;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-info {
+            background: var(--info-color);
+            border: none;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            color: white;
+        }
+        
+        .btn-info:hover, .btn-info:focus {
+            background: #1e88e5;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+            color: white;
+        }
+        
+        .loading-content {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(5px);
+        }
+        
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .loading-text {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .loading-subtext {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+        
+        .result-card {
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: white;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-image {
+            height: 300px;
+            width: 100%;
+            object-fit: contain;
+            background-color: rgba(0, 0, 0, 0.03);
+            padding: 10px;
+        }
+        
+        .result-details {
+            padding: 20px;
+        }
+        
+        .caption-box {
+            background-color: rgba(67, 97, 238, 0.05);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            margin-bottom: 20px;
+        }
+        
+        .caption-box h5 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .caption-box h5 i {
+            margin-right: 8px;
+        }
+        
+        .caption-box p {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #444;
+        }
+        
+        .audio-player {
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .audio-player h5 {
+            margin-bottom: 15px;
+            color: #555;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .audio-player h5 i {
+            margin-right: 8px;
+            color: var(--warning-color);
+        }
+        
+        .audio-player audio {
+            width: 100%;
+            border-radius: var(--border-radius);
+            outline: none;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .download-count {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .section-title {
+            margin-bottom: 30px;
+            position: relative;
+            padding-left: 15px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 25px;
+            width: 5px;
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        /* For small screens */
+        @media (max-width: 767.98px) {
+            .card-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .dropzone {
+                padding: 20px;
+            }
+            
+            .dropzone .upload-icon {
+                font-size: 36px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        /* Animated badge */
+        .badge-animated {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+        }
+        
+        .toast {
+            width: 350px;
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast-header {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .toast-body {
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* Smooth transitions */
+        .fade-enter {
+            opacity: 0;
+        }
+        
+        .fade-enter-active {
+            opacity: 1;
+            transition: opacity 300ms;
+        }
+        
+        .fade-exit {
+            opacity: 1;
+        }
+        
+        .fade-exit-active {
+            opacity: 0;
+            transition: opacity 300ms;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="app-header">
+            <h1><i class="fas fa-camera-retro"></i> Smart Image Captioning</h1>
+            <p>Upload images to generate intelligent captions with audio descriptions</p>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Upload Images</h3>
+            </div>
+            <div class="card-body">
+                <div id="dropzone" class="dropzone">
+                    <div class="upload-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <p>Drag and drop images here or click to browse</p>
+                    <p class="sub-text">Supports JPG, PNG, and GIF files (Max: 10MB per file)</p>
+                    <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+                </div>
+                
+                <div id="preview" class="row g-3"></div>
+                
+                <div class="text-center mt-4">
+                    <button id="processBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-magic"></i> Generate Captions
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultSection" style="display: none;">
+            <h2 class="section-title">Results</h2>
+            <div id="results" class="row"></div>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner-border text-light" role="status"></div>
+                <div class="loading-text">Processing your images...</div>
+                <div class="loading-subtext">This might take a moment depending on the number of images</div>
+            </div>
+        </div>
+        
+        <!-- Toast container for notifications -->
+        <div class="toast-container"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const preview = document.getElementById('preview');
+            const processBtn = document.getElementById('processBtn');
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('resultSection');
+            const resultsContainer = document.getElementById('results');
+            const toastContainer = document.querySelector('.toast-container');
+            
+            let files = [];
+            let processedCount = 0;
+            
+            // Show a toast notification
+            function showToast(title, message, type = 'primary') {
+                const toastId = 'toast-' + Date.now();
+                const toast = document.createElement('div');
+                toast.className = 'toast show';
+                toast.id = toastId;
+                
+                // Get icon based on type
+                let icon = 'info-circle';
+                if (type === 'success') icon = 'check-circle';
+                else if (type === 'danger') icon = 'exclamation-circle';
+                else if (type === 'warning') icon = 'exclamation-triangle';
+                
+                // Get color based on type
+                let color = 'var(--primary-color)';
+                if (type === 'success') color = 'var(--success-color)';
+                else if (type === 'danger') color = 'var(--danger-color)';
+                else if (type === 'warning') color = 'var(--warning-color)';
+                
+                toast.innerHTML = `
+                    <div class="toast-header" style="background-color: ${color}">
+                        <i class="fas fa-${icon} me-2"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Auto-close after 5 seconds
+                setTimeout(() => {
+                    const toastElement = document.getElementById(toastId);
+                    if (toastElement) {
+                        toastElement.classList.remove('show');
+                        setTimeout(() => toastElement.remove(), 300);
+                    }
+                }, 5000);
+                
+                // Add event listener to close button
+                toast.querySelector('.btn-close').addEventListener('click', () => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                });
+            }
+            
+            // Handle drag and drop events
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            // Handle click to select files
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (fileInput.files.length > 0) {
+                    handleFiles(fileInput.files);
+                }
+            });
+            
+            function handleFiles(newFiles) {
+                // Validate file types and sizes
+                const validFiles = Array.from(newFiles).filter(file => {
+                    const validType = /image\/(jpeg|png|gif|jpg)/.test(file.type);
+                    const validSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+                    
+                    if (!validType) {
+                        showToast('Invalid File', `${file.name} is not a supported image format.`, 'warning');
+                    }
+                    
+                    if (!validSize) {
+                        showToast('File Too Large', `${file.name} exceeds the 10MB size limit.`, 'warning');
+                    }
+                    
+                    return validType && validSize;
+                });
+                
+                if (validFiles.length === 0) return;
+                
+                // Update files array and preview
+                files = validFiles;
+                preview.innerHTML = '';
+                
+                if (files.length > 0) {
+                    processBtn.disabled = false;
+                    showToast('Files Ready', `${files.length} image${files.length > 1 ? 's' : ''} selected and ready for processing.`, 'success');
+                    
+                    // Show preview of selected images
+                    files.forEach((file, index) => {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'col-lg-3 col-md-4 col-sm-6';
+                            
+                            const card = document.createElement('div');
+                            card.className = 'image-preview-card position-relative';
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'card-img';
+                            
+                            const overlay = document.createElement('div');
+                            overlay.className = 'card-img-overlay';
+                            
+                            const removeBtn = document.createElement('div');
+                            removeBtn.className = 'remove-btn';
+                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            removeBtn.onclick = function() {
+                                files = files.filter((_, i) => i !== index);
+                                col.remove();
+                                if (files.length === 0) {
+                                    processBtn.disabled = true;
+                                }
+                            };
+                            
+                            overlay.appendChild(removeBtn);
+                            
+                            const body = document.createElement('div');
+                            body.className = 'card-body p-2';
+                            
+                            const name = document.createElement('p');
+                            name.className = 'card-text small text-muted text-truncate mb-0';
+                            name.title = file.name;
+                            name.textContent = file.name;
+                            
+                            body.appendChild(name);
+                            card.appendChild(img);
+                            card.appendChild(overlay);
+                            card.appendChild(body);
+                            col.appendChild(card);
+                            preview.appendChild(col);
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    processBtn.disabled = true;
+                }
+            }
+            
+            // Process button click handler
+            processBtn.addEventListener('click', function() {
+                if (files.length === 0) return;
+                
+                loading.style.display = 'flex';
+                resultSection.style.display = 'none';
+                processedCount = 0;
+                
+                const formData = new FormData();
+                
+                files.forEach(file => {
+                    formData.append('files[]', file);
+                });
+                
+                fetch('/process_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    
+                    if (data.error) {
+                        showToast('Error', data.error, 'danger');
+                        return;
+                    }
+                    
+                    // Display results
+                    resultSection.style.display = 'block';
+                    resultsContainer.innerHTML = '';
+                    processedCount = data.results.length;
+                    
+                    showToast('Processing Complete', `Successfully processed ${processedCount} image${processedCount > 1 ? 's' : ''}.`, 'success');
+                    
+                    data.results.forEach((result, index) => {
+                        const col = document.createElement('div');
+                        col.className = 'col-lg-6 col-md-12 mb-4';
+                        col.style.opacity = '0';
+                        col.style.transform = 'translateY(20px)';
+                        
+                        const resultCard = document.createElement('div');
+                        resultCard.className = 'result-card position-relative';
+                        
+                        // Download count badge
+                        const badge = document.createElement('div');
+                        badge.className = 'download-count';
+                        badge.innerHTML = `<i class="fas fa-image"></i> Image ${index + 1}/${processedCount}`;
+                        
+                        // Image section
+                        const img = document.createElement('img');
+                        img.src = `data:image/jpeg;base64,${result.image}`;
+                        img.className = 'result-image';
+                        img.alt = result.filename;
+                        
+                        // Details section
+                        const details = document.createElement('div');
+                        details.className = 'result-details';
+                        
+                        // Caption box
+                        const captionBox = document.createElement('div');
+                        captionBox.className = 'caption-box';
+                        captionBox.innerHTML = `
+                            <h5><i class="fas fa-quote-left"></i> Caption</h5>
+                            <p>${result.caption}</p>
+                        `;
+                        
+                        // Audio player
+                        const audioPlayer = document.createElement('div');
+                        audioPlayer.className = 'audio-player';
+                        audioPlayer.innerHTML = `
+                            <h5><i class="fas fa-volume-up"></i> Audio Description</h5>
+                            <audio controls autoplay src="${result.audio_path}" class=""></audio>
+                        `;
+                        
+                        // Action buttons
+                        const actionButtons = document.createElement('div');
+                        actionButtons.className = 'action-buttons';
+                        
+                        const downloadAudio = document.createElement('a');
+                        downloadAudio.href = result.audio_path;
+                        downloadAudio.className = 'btn btn-success flex-grow-1';
+                        downloadAudio.innerHTML = '<i class="fas fa-download"></i> Download Audio';
+                        downloadAudio.setAttribute('download', '');
+                        downloadAudio.addEventListener('click', () => {
+                            showToast('Download Started', 'Audio file download has started.', 'success');
+                        });
+                        
+                        const downloadCaption = document.createElement('a');
+                        downloadCaption.href = result.caption_path;
+                        downloadCaption.className = 'btn btn-info flex-grow-1';
+                        downloadCaption.innerHTML = '<i class="fas fa-file-alt"></i> Download Caption';
+                        downloadCaption.setAttribute('download', '');
+                        downloadCaption.addEventListener('click', () => {
+                            showToast('Download Started', 'Caption file download has started.', 'success');
+                        });
+                        
+                        actionButtons.appendChild(downloadAudio);
+                        actionButtons.appendChild(downloadCaption);
+                        
+                        // Assemble the card
+                        details.appendChild(captionBox);
+                        details.appendChild(audioPlayer);
+                        details.appendChild(actionButtons);
+                        
+                        resultCard.appendChild(badge);
+                        resultCard.appendChild(img);
+                        resultCard.appendChild(details);
+                        
+                        col.appendChild(resultCard);
+                        resultsContainer.appendChild(col);
+                        
+                        // Animate the card in with a delay based on index
+                        setTimeout(() => {
+                            col.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                            col.style.opacity = '1';
+                            col.style.transform = 'translateY(0)';
+                        }, 100 * index);
+                    });
+                    
+                    // Scroll to results with smooth animation
+                    setTimeout(() => {
+                        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 300);
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    showToast('Error', `An error occurred: ${error.message}`, 'danger');
+                });
+            });
+            
+            // Show welcome toast after a short delay
+            setTimeout(() => {
+                showToast('Welcome', 'Upload images to generate intelligent captions with audio descriptions.', 'primary');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
